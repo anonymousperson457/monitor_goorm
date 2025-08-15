@@ -35,13 +35,13 @@ def extract_pubkey_from_scriptsig(scriptsig_hex):
 def main():
     address = "1PWo3JeB9jrGwfHDNpdGK54CRas7fsVzXU"
     if not address.startswith('1'):
-        print("Invalid Testnet4 P2PKH Address (Must Start With '1'). Exiting.")
+        print("Invalid P2PKH Address (Must Start With '1'). Exiting.")
         sys.exit(1)
     
     api_base = "https://mempool.space/api"
     txs_url = f"{api_base}/address/{address}/txs"
     
-    print(f"Monitoring Mainnet address: {address}")
+    print(f"Monitoring Address For Outgoing Tx: {address}")
     print("Waiting For Outgoing Tx To Extract Public Key...")
     
     seen_txids = set()
@@ -58,9 +58,11 @@ def main():
                 continue
             seen_txids.add(txid)
             
+            is_outgoing = False
             for vin in tx['vin']:
                 prevout = vin.get('prevout', {})
                 if prevout.get('scriptpubkey_address') == address and prevout.get('scriptpubkey_type') == 'p2pkh':
+                    is_outgoing = True
                     pubkey = extract_pubkey_from_scriptsig(vin.get('scriptsig', ''))
                     if pubkey:
                         print(f"Public Key Found")
@@ -77,7 +79,6 @@ def main():
                         except subprocess.CalledProcessError as e:
                             print(f"Command failed: {e}")
                         sys.exit(0)
-        
         time.sleep(3)
 
 if __name__ == "__main__":
